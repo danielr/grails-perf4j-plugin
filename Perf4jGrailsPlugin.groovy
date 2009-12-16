@@ -37,9 +37,9 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     // the name of the config property in services
     static final String PROFILED_PROPERTY = "profiled"
     // indicates whether profiling is enabled AT ALL (according to config option or implicitly by environment)
-    Boolean profilingEnabled = false
+    static Boolean profilingEnabled = false
     // indicates whether profiling is CURRENTLY enabled (as set via "profilingEnabled" property during runtime)
-    Boolean profilingCurrentlyEnabled = true
+    static Boolean profilingCurrentlyEnabled = true
 
 
     def doWithSpring = {

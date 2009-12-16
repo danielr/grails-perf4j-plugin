@@ -27,42 +27,44 @@ public class Perf4jFilters {
         
         all(controller:'*', action: '*') {
             before = {
-                if(controllerName) {
-                    def action = actionName ?: 'index'
-                    def controller = GNU.getClassName(controllerName, "Controller")
+                if(Perf4jGrailsPlugin.profilingEnabled && Perf4jGrailsPlugin.profilingCurrentlyEnabled) {
+                    if(controllerName) {
+                        def action = actionName ?: 'index'
+                        def controller = GNU.getClassName(controllerName, "Controller")
                     
-                    def controllerClass = grailsApplication.getArtefactByLogicalPropertyName("Controller", controllerName)
-                    if(controllerClass) {
-                        def profiled = GCU.getStaticPropertyValue(controllerClass.clazz, PROFILED_PROPERTY)
+                        def controllerClass = grailsApplication.getArtefactByLogicalPropertyName("Controller", controllerName)
+                        if(controllerClass) {
+                            def profiled = GCU.getStaticPropertyValue(controllerClass.clazz, PROFILED_PROPERTY)
 
-                        if(profiled instanceof Boolean && profiled) {
-                            log.trace "Boolean type profiled property in ${controller}"
-                            createStopwatch(null, null, false, controller, action, request)
-                        }
-                        else if(profiled instanceof List && profiled.contains(action)) {
-                            log.trace "Collection type profiled property in ${controller}"
-                            createStopwatch(null, null, false, controller, action, request)
-                        }
-                        else if(profiled instanceof Closure) {
-                            log.trace "Closure type profiled property in ${controller}"
+                            if(profiled instanceof Boolean && profiled) {
+                                log.trace "Boolean type profiled property in ${controller}"
+                                createStopwatch(null, null, false, controller, action, request)
+                            }
+                            else if(profiled instanceof List && profiled.contains(action)) {
+                                log.trace "Collection type profiled property in ${controller}"
+                                createStopwatch(null, null, false, controller, action, request)
+                            }
+                            else if(profiled instanceof Closure) {
+                                log.trace "Closure type profiled property in ${controller}"
                             
-                            if(!profilingOptions.containsKey(controllerName)) {
-                                log.trace "Evaluating profiled DSL in ${controller}"
+                                if(!profilingOptions.containsKey(controllerName)) {
+                                    log.trace "Evaluating profiled DSL in ${controller}"
                                 
-                                // run closure with builder as delegate
-                                def builder = new ProfiledOptionsBuilder()
-                                profiled.delegate = builder
-                                profiled.resolveStrategy = Closure.DELEGATE_ONLY
-                                profiled.call()
-                                profilingOptions[controllerName] = builder.profiledMap
-                            }
-                            else {
-                                log.trace "Using cached profiling options for ${controller}"
-                            }
+                                    // run closure with builder as delegate
+                                    def builder = new ProfiledOptionsBuilder()
+                                    profiled.delegate = builder
+                                    profiled.resolveStrategy = Closure.DELEGATE_ONLY
+                                    profiled.call()
+                                    profilingOptions[controllerName] = builder.profiledMap
+                                }
+                                else {
+                                    log.trace "Using cached profiling options for ${controller}"
+                                }
 
-                            def options = profilingOptions[controllerName]
-                            if(options && options.containsKey(action)) {
-                                createStopwatch(options[action].tag, options[action].message, options[action].includeView as Boolean, controller, action, request)
+                                def options = profilingOptions[controllerName]
+                                if(options && options.containsKey(action)) {
+                                    createStopwatch(options[action].tag, options[action].message, options[action].includeView as Boolean, controller, action, request)
+                                }
                             }
                         }
                     }
@@ -71,19 +73,23 @@ public class Perf4jFilters {
 
             
             after = {
-                def includeView = request[INCLUDE_VIEW_REQUEST_KEY]
+                if(Perf4jGrailsPlugin.profilingEnabled && Perf4jGrailsPlugin.profilingCurrentlyEnabled) {
+                    def includeView = request[INCLUDE_VIEW_REQUEST_KEY]
             
-                if(!includeView) {
-                    stopStopwatch(request)
+                    if(!includeView) {
+                        stopStopwatch(request)
+                    }
                 }
             }
 
 
             afterView = {
-                def includeView = request[INCLUDE_VIEW_REQUEST_KEY]
+                if(Perf4jGrailsPlugin.profilingEnabled && Perf4jGrailsPlugin.profilingCurrentlyEnabled) {
+                    def includeView = request[INCLUDE_VIEW_REQUEST_KEY]
             
-                if(includeView) {
-                    stopStopwatch(request)
+                    if(includeView) {
+                        stopStopwatch(request)
+                    }
                 }
             }
         }
