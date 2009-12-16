@@ -5,9 +5,8 @@
   <description>This plugin integrates the Perf4J performance statistics library (http://perf4j.codehaus.org) into Grails applications. It provides idiomatic 
 ways to profile individual code blocks and automatic, customizable profiling of service methods.</description>
   <documentation>http://www.grails.org/plugin/perf4j</documentation>
-  <resources />
-  <dependencies>
-    <resolvers />
-  </dependencies>
-  <behavior />
+  <resources>
+    <resource>Perf4jFilters</resource>
+  </resources>
+  <dependencies />
 </plugin>

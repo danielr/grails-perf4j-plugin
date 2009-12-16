@@ -4,6 +4,8 @@ import grails.util.GrailsUtil
 
 import org.perf4j.log4j.Log4JStopWatch
 
+import org.grails.plugins.perf4j.ProfiledOptionsBuilder
+
 
 class Perf4jGrailsPlugin {
     // the plugin version
@@ -212,7 +214,7 @@ ways to profile individual code blocks and automatic, customizable profiling of 
                 log.debug "Found static profiled property of type Closure..."
 
                 // run closure with builder as delegate
-                def builder = new ProfiledBuilder()
+                def builder = new ProfiledOptionsBuilder()
                 profiled.delegate = builder
                 profiled.resolveStrategy = Closure.DELEGATE_ONLY
                 profiled.call()
@@ -270,25 +272,6 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     def getInterceptableMethods(artefactClass) {
         artefactClass.declaredMethods.grep {
             !it.synthetic && !(it.name ==~ /(get|set)Profiled/)
-        }
-    }
-}
-
-/**
- *  The builder to evaluate the DSL used if the profiled property is a Closure.
- */
-class ProfiledBuilder {
-    def profiledMap = [:]
-    
-    def methodMissing(String name, args) {
-        if(args.length > 0) {
-            if(!args[0] instanceof Map) {
-                throw new RuntimeException("Argument for methods in profiled DSL must be of type Map")
-            }
-            profiledMap[name] = args[0]
-        }
-        else {
-            profiledMap[name] = [:]
         }
     }
 }
