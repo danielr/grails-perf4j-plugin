@@ -41,6 +41,8 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     // indicates whether profiling is CURRENTLY enabled (as set via "profilingEnabled" property during runtime)
     static Boolean profilingCurrentlyEnabled = true
 
+    private static dummyObjectInstance = new DummyObject()
+
 
     def doWithSpring = {
     }
@@ -152,18 +154,24 @@ ways to profile individual code blocks and automatic, customizable profiling of 
 
         artefactClass.metaClass.withStopwatch << { String tag, String message, Closure callable ->
             if(this.profilingEnabled && this.profilingCurrentlyEnabled) {
-                def stopWatch = new Log4JStopWatch(tag, message)
+                def stopWatch = new Log4JStopWatch()
                 def retVal
                 try {
-                    retVal = callable.call()
+                    retVal = callable.call(stopWatch)
                 }
                 finally {
-                    stopWatch.stop()
+                    if(message == null)
+                        stopWatch.stop(tag, message)
+                    else
+                        stopWatch.stop(tag)
                 }
                 return retVal
             }
+            
+            // profiling disabled
             else {
-                return callable.call()
+                // call the closure with our dummy object to prevent NPEs
+                return callable.call(dummyObjectInstance)
             }
         }
         
@@ -274,4 +282,11 @@ ways to profile individual code blocks and automatic, customizable profiling of 
             !it.synthetic && !(it.name ==~ /(get|set)Profiled/)
         }
     }
+}
+
+/**
+ *  This is just a dummy class, whose instances accept all methods.
+ */
+class DummyObject {
+    def methodMissing(String name, args) { }
 }
