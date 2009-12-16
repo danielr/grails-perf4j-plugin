@@ -160,7 +160,7 @@ ways to profile individual code blocks and automatic, customizable profiling of 
                     retVal = callable.call(stopWatch)
                 }
                 finally {
-                    if(message == null)
+                    if(message != null)
                         stopWatch.stop(tag, message)
                     else
                         stopWatch.stop(tag)
