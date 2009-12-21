@@ -5,6 +5,7 @@ import grails.util.GrailsUtil
 import org.perf4j.log4j.Log4JStopWatch
 
 import org.grails.plugins.perf4j.ProfiledOptionsBuilder
+import org.grails.plugins.perf4j.ControllerProfiledOptionsCache
 
 
 class Perf4jGrailsPlugin {
@@ -45,6 +46,8 @@ ways to profile individual code blocks and automatic, customizable profiling of 
 
 
     def doWithSpring = {
+        // register controller options cache as spring bean
+        controllerProfiledOptionsCache(ControllerProfiledOptionsCache)
     }
 
     def doWithApplicationContext = { applicationContext ->
