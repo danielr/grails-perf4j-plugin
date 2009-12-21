@@ -16,12 +16,12 @@ class Perf4jGrailsPlugin {
     def grailsVersion = "1.1 > *"
     // the other plugins this plugin depends on
     def dependsOn = [:]
-    def loadAfter = ['core', 'hibernate', 'services', 'controllers', 'logging']
+    def loadAfter = ['core', 'hibernate', 'services', 'controllers', 'logging', 'quartz']
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
             "grails-app/views/error.gsp", "web-app/**"
     ]
-    def observe = [ 'controllers', 'services', 'hibernate' ]
+    def observe = [ 'controllers', 'services', 'hibernate', 'quartz' ]
     
 
     // plugin metadata
@@ -95,7 +95,6 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     }
 
     def onChange = { event ->
-        
         if(application.isControllerClass(event.source)) {
             addPerf4jMethods(event.source, log)
 
@@ -114,6 +113,9 @@ ways to profile individual code blocks and automatic, customizable profiling of 
         else if(application.isServiceClass(event.source)) {
             addPerf4jMethods(event.source, log)
             addPerf4jGlobalProfiling(event.source, log)
+        }
+        else if(application.artefactHandlers.any { it.type == 'Task' } && application.isTaskClass(event.source)) {
+            addPerf4jMethods(event.source, log)
         }
     }
 
@@ -148,6 +150,12 @@ ways to profile individual code blocks and automatic, customizable profiling of 
         application.serviceClasses.each() {
             addPerf4jMethods(it.clazz, log)
             addPerf4jGlobalProfiling(it.clazz, log)
+        }
+        
+        if(application.artefactHandlers.any { it.type == 'Task' }) {
+            application.taskClasses.each {
+                addPerf4jMethods(it.clazz, log)
+            }
         }
     }
     
