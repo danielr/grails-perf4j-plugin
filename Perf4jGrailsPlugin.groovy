@@ -1,4 +1,5 @@
 import org.codehaus.groovy.grails.commons.GrailsClassUtils as GCU
+import grails.util.GrailsNameUtils as GNU
 import org.codehaus.groovy.grails.plugins.support.GrailsPluginUtils
 import grails.util.GrailsUtil
 
@@ -94,8 +95,18 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     }
 
     def onChange = { event ->
+        
         if(application.isControllerClass(event.source)) {
             addPerf4jMethods(event.source, log)
+
+            // invalidate the options cache for this controller (they may have changed)
+            def logicalName = GNU.getLogicalName(event.source, "Controller")
+            if(logicalName) {
+                logicalName = logicalName[0].toLowerCase() + (logicalName.size() > 1 ? logicalName[1..-1] : '')
+
+                def cache = event.ctx.controllerProfiledOptionsCache
+                cache.invalidateCacheForController(logicalName)
+            }
         }
         else if(application.isDomainClass(event.source)) {
             addPerf4jMethods(event.source, log)

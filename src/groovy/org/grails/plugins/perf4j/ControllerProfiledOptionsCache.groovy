@@ -21,7 +21,11 @@ class ControllerProfiledOptionsCache {
         this.profilingOptions[controllerName] = builder.profiledMap
     }
     
-    Map getOptions(controllerName, actionName) {
+    Map getOptions(String controllerName, String actionName) {
         this.profilingOptions[controllerName]?.get(actionName)
+    }
+    
+    void invalidateCacheForController(String controllerName) {
+        this.profilingOptions.remove(controllerName)
     }
 }
