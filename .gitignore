@@ -1,3 +1,6 @@
 .svn/
 docs/
 target/
+.idea/
+*.iml
+.directory
