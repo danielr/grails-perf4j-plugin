@@ -1,5 +1,6 @@
 import org.codehaus.groovy.grails.commons.GrailsClassUtils as GCU
 import grails.util.GrailsNameUtils as GNU
+import org.grails.plugins.perf4j.SharedOptions
 import org.perf4j.log4j.Log4JStopWatch
 import org.apache.log4j.Logger
 
@@ -11,7 +12,7 @@ public class Perf4jFilters {
     static final String STOPWATCH_REQUEST_KEY = 'perf4jplugin.stopwatch'
     // the key used to store the includeView flag in the request
     static final String INCLUDE_VIEW_REQUEST_KEY = 'perf4jplugin.includeView'
-    
+
     def log = Logger.getLogger(Perf4jFilters)
 
     def controllerProfiledOptionsCache
@@ -22,7 +23,7 @@ public class Perf4jFilters {
         
         all(controller:'*', action: '*') {
             before = {
-                if(Perf4jGrailsPlugin.profilingEnabled && Perf4jGrailsPlugin.profilingCurrentlyEnabled) {
+                if(SharedOptions.profilingEnabled && SharedOptions.profilingCurrentlyEnabled) {
                     if(controllerName) {
                         def action = actionName ?: 'index'
                         def controller = GNU.getClassName(controllerName, "Controller")
@@ -62,7 +63,7 @@ public class Perf4jFilters {
 
             
             after = {
-                if(Perf4jGrailsPlugin.profilingEnabled && Perf4jGrailsPlugin.profilingCurrentlyEnabled) {
+                if(SharedOptions.profilingEnabled && SharedOptions.profilingCurrentlyEnabled) {
                     def includeView = request[INCLUDE_VIEW_REQUEST_KEY]
             
                     if(!includeView) {
@@ -73,7 +74,7 @@ public class Perf4jFilters {
 
 
             afterView = {
-                if(Perf4jGrailsPlugin.profilingEnabled && Perf4jGrailsPlugin.profilingCurrentlyEnabled) {
+                if(SharedOptions.profilingEnabled && SharedOptions.profilingCurrentlyEnabled) {
                     def includeView = request[INCLUDE_VIEW_REQUEST_KEY]
             
                     if(includeView) {

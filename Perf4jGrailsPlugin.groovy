@@ -2,7 +2,7 @@ import org.codehaus.groovy.grails.commons.GrailsClassUtils as GCU
 import grails.util.GrailsNameUtils as GNU
 import org.codehaus.groovy.grails.plugins.support.GrailsPluginUtils
 import grails.util.GrailsUtil
-
+import org.grails.plugins.perf4j.SharedOptions
 import org.perf4j.log4j.Log4JStopWatch
 
 import org.grails.plugins.perf4j.ProfiledOptionsBuilder
@@ -35,16 +35,10 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     // URL to the plugin's documentation
     def documentation = "http://www.grails.org/plugin/perf4j"
 
-
     // the name of the config property in services
     static final String PROFILED_PROPERTY = "profiled"
-    // indicates whether profiling is enabled AT ALL (according to config option or implicitly by environment)
-    static Boolean profilingEnabled = false
-    // indicates whether profiling is CURRENTLY enabled (as set via "profilingEnabled" property during runtime)
-    static Boolean profilingCurrentlyEnabled = true
 
     private static dummyObjectInstance = new DummyObject()
-
 
     def doWithSpring = {
         // register controller options cache as spring bean
@@ -120,10 +114,10 @@ ways to profile individual code blocks and automatic, customizable profiling of 
     }
 
     def onConfigChange = { event ->
-        def oldEnabled = profilingEnabled
+        def oldEnabled = SharedOptions.profilingEnabled
         evaluateConfigSettings(application, log)
         
-        if(oldEnabled != profilingEnabled) {
+        if(oldEnabled != SharedOptions.profilingEnabled) {
             // re-register all methods
             addPerf4jFeaturesToAllArtefacts(application, log)
         }
@@ -135,7 +129,7 @@ ways to profile individual code blocks and automatic, customizable profiling of 
      */
     def evaluateConfigSettings(application, log) {
         log.info "Evaluating new Perf4j config settings..."
-        profilingEnabled = (application.config.flatten().containsKey("perf4j.enabled") ? application.config.perf4j.enabled : GrailsUtil.isDevelopmentEnv())
+        SharedOptions.profilingEnabled = (application.config.flatten().containsKey("perf4j.enabled") ? application.config.perf4j.enabled : GrailsUtil.isDevelopmentEnv())
     }
 
     def addPerf4jFeaturesToAllArtefacts(application, log) {
@@ -175,7 +169,7 @@ ways to profile individual code blocks and automatic, customizable profiling of 
         }
 
         artefactClass.metaClass.withStopwatch << { String tag, String message, Closure callable ->
-            if(this.profilingEnabled && this.profilingCurrentlyEnabled) {
+            if(SharedOptions.profilingEnabled && SharedOptions.profilingCurrentlyEnabled) {
                 def stopWatch = new Log4JStopWatch()
                 def retVal
                 try {
@@ -198,11 +192,11 @@ ways to profile individual code blocks and automatic, customizable profiling of 
         }
         
         artefactClass.metaClass.setProfilingEnabled << { Boolean enabled ->
-            this.profilingCurrentlyEnabled = enabled
+            SharedOptions.profilingCurrentlyEnabled = enabled
         }
 
         artefactClass.metaClass.getProfilingEnabled << { ->
-            this.profilingCurrentlyEnabled
+            SharedOptions.profilingCurrentlyEnabled
         }
     }
     
@@ -216,7 +210,7 @@ ways to profile individual code blocks and automatic, customizable profiling of 
          *  because otherwise we would not be able to "hot enable" it upon config change (adding methods via ExpandoMetaClass is only
          *  allowed within doWithDynamicMethods()).
          */
-        if(profilingEnabled || GrailsUtil.isDevelopmentEnv()) {
+        if(SharedOptions.profilingEnabled || GrailsUtil.isDevelopmentEnv()) {
             log.info "Adding Per4j interception code: ${artefactClass}..."
 
             def profiled = GCU.getStaticPropertyValue(artefactClass, PROFILED_PROPERTY)
@@ -268,7 +262,7 @@ ways to profile individual code blocks and automatic, customizable profiling of 
                 artefactClass.metaClass.invokeMethod = { String name, args ->
                     def metaMethod = artefactClass.metaClass.getMetaMethod(name, args)
                     if(metaMethod) {
-                        if(this.profilingEnabled && this.profilingCurrentlyEnabled && profilingOptions.containsKey(name)) {
+                        if(SharedOptions.profilingEnabled && SharedOptions.profilingCurrentlyEnabled && profilingOptions.containsKey(name)) {
                             def tag = profilingOptions[name]?.tag ?: ""
                             def message = profilingOptions[name]?.message ?: null
                             def stopWatch = new Log4JStopWatch(tag, message)
